@@ -87,6 +87,7 @@ infixr 8 ^
 
 -- quotient
 (/) :: Nat -> Nat -> Nat 
+_ / O = undefined 
 O / _ = O 
 n / m = S ((n -* m) / m) -* (n < m) -- if n<m, (/) is called one time more than it should
 infixl 7 /
@@ -102,9 +103,9 @@ infixl 7 %
 -- and then define `devides` as a synonym to it
 -- again, outputs: O means False, S O means True
 (|||) :: Nat -> Nat -> Nat
-O ||| _     = O
-_ ||| (S O) = S O
-n ||| m     = (m % n) < S O --if  remainder is zero, outputs S O; else, outputs O
+_ ||| O = S O
+O ||| _ = O
+n ||| m = (m % n) < S O --if  remainder is zero, outputs S O; else, outputs O
 
 infixl 5 |||
 
@@ -127,14 +128,16 @@ sg (S n) = S O
 -- never negative
 
 lo :: Nat -> Nat -> Nat
-lo O _     = O -- for base-case's sake
 lo _ O     = undefined
+lo O _     = undefined
 lo _ (S O) = undefined
 lo (S O) _ = O
-lo n m     = S (lo (n/m) m) -* (n < m) --if n<m, lo is called one time more than it should
+lo n m     = (S (lo (n/m) m)      -- recursively call log (n/m) on base m adding one until n/m = O
+              * ((n < m) < S O))  --if n < m, log is zero 
 
 -- extra
 -- Output: O means False, S O means True
+
 -- less than
 (<)::Nat->Nat->Nat
 _ < O = O
