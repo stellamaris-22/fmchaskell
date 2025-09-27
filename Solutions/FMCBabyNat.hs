@@ -127,13 +127,14 @@ sg O     = O
 sg (S n) = S O
 -- never negative
 
+-- lo b a is the floor of the logarithm base b of a
 lo :: Nat -> Nat -> Nat
 lo _ O     = undefined
 lo O _     = undefined
-lo _ (S O) = undefined
-lo (S O) _ = O
-lo n m     = (S (lo (n/m) m)      -- recursively call log (n/m) on base m adding one until n/m = O
-              * ((n < m) < S O))  --if n < m, log is zero 
+lo (S O) _ = undefined
+lo _ (S O) = O
+lo b a     = (S (lo b (a/b))      -- recursively call log (a/b) on base b adding one until a/b = O
+              * ((a < b) < S O))  --if a < b, log is zero 
 
 -- extra
 -- Output: O means False, S O means True
