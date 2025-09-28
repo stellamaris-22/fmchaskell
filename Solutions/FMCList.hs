@@ -58,12 +58,12 @@ write [u,v]     for our u `Cons` (v `Cons` Nil)
 -}
 
 head :: [a] -> a
-head []       = undefined
-head (x : xs) = x
+head [x]      = x
+head (x : _) = x
 
 tail :: [a] -> [a]
 tail []       = []
-tail (x : xs) = xs
+tail (_ : xs) = xs
 
 null :: [a] -> Bool
 null [] = True
@@ -123,8 +123,17 @@ infixl 5 +++
 -- makes sense cause it inserts elements 
 -- from the right
 
--- minimum :: Ord a => [a] -> a
--- maximum :: Ord a => [a] -> a
+minimum :: Ord a => [a] -> a
+minimum [x]      = x 
+minimum (x : xs) = if x <= (minimum xs)
+                   then x
+                   else minimum xs
+
+maximum :: Ord a => [a] -> a
+maximum [x]      = x 
+maximum (x : xs) = if x > (maximum xs)
+                   then x
+                   else maximum xs
 
 -- take
 -- drop
