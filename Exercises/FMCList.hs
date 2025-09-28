@@ -58,56 +58,37 @@ write [u,v]     for our u `Cons` (v `Cons` Nil)
 -}
 
 head :: [a] -> a
-head []       = undefined
-head (x : xs) = x
+head = undefined
 
 tail :: [a] -> [a]
-tail []       = []
-tail (x : xs) = xs
+tail = undefined
 
 null :: [a] -> Bool
-null [] = True
-null _  = False
+null = undefined
 
 length :: Integral i => [a] -> i
-length []       = 0
-length (_ : xs) = 1 + length xs
+length = undefined
 
--- Sum of all?
 sum :: Num a => [a] -> a
-sum []       = 0
-sum (x : xs) = x + sum xs
+sum = undefined
 
--- Product of all?
 product :: Num a => [a] -> a
-product []       = 1
-product (x : xs) = x * product xs
+product = undefined
 
--- List with all items but in reverse order
 reverse :: [a] -> [a]
-reverse []       = []
-reverse (x : xs) = reverse xs ++ (x : [])
+reverse = undefined
 
 (++) :: [a] -> [a] -> [a]
-[] ++ l       = l;
-l ++ []       = l;
-(x : xs) ++ l = (x : (xs ++ l))
+(++) = undefined
 
 -- right-associative for performance!
 -- (what?!)
 infixr 5 ++
--- makes sense bcs on this format of 
--- construction the list is on the right
--- and new elements come from the left
 
 -- (snoc is cons written backwards)
 snoc :: a -> [a] -> [a]
-snoc x [] = [x]
-snoc x y  = y ++ [x]
--- is it supposed to put the element on 
--- the end of the list...?
+snoc = undefined
 
--- swapped arguments?
 (<:) :: [a] -> a -> [a]
 (<:) = flip snoc
 
@@ -120,8 +101,6 @@ xs +++ (y:ys) = (xs +++ [y]) +++ ys
 -- left-associative for performance!
 -- (hmm?!)
 infixl 5 +++
--- makes sense cause it inserts elements 
--- from the right
 
 -- minimum :: Ord a => [a] -> a
 -- maximum :: Ord a => [a] -> a
@@ -185,14 +164,8 @@ infixl 5 +++
 
 -- checks if the letters of a phrase form a palindrome (see below for examples)
 palindrome :: String -> Bool
-palindrome [] = True
-palindrome s  = s == reverse s 
--- my best for now but im pretty sure ill
--- be able to use recursion by extracting last
--- and comparing to first and doing && 
--- with palindrome rest-of-the-list
+palindrome = undefined
 
--- also are we supposed to ignore punctuation...?
 {-
 
 Examples of palindromes:
