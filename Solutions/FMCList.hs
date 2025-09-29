@@ -135,62 +135,116 @@ maximum (x : xs) = if x > (maximum xs)
                    then x
                    else maximum xs
 
--- take
--- drop
+-- signatures from line 220
+-- take a -> [a] -> ???
+-- drop a -> [a] -> ???
 
+-- ???
 -- takeWhile
 -- dropWhile
 
+-- ???
 -- tails
 -- init
 -- inits
 
--- subsequences
+-- half-sure...but sure of signature
+subsequences :: [a] -> [a] -> [a]
+subsequences = undefined
 
--- any
--- all
+--im assuming im meant to say if 
+--any of the items in the list is
+--same as first argument
+any :: Eq a => a->[a]->Bool
+any _ [] = False
+any x (y:ys) = if x == y
+               then True
+               else any x ys
 
+--im assuming im meant to say if 
+--all of the items in the list are
+--same as first argument
+all :: Eq a => a->[a]->Bool
+all _ [] = True
+all x (y:ys) = if x /= y
+               then False
+               else all x ys
+
+--these feel weirdly like number abuse
+--or used only for Bool lists
+--which means prolly both my guesses 
+--are wrong :p
 -- and
 -- or
 
+--in my mind thats the same as ++
 -- concat
 
+-- ??
 -- elem using the funciton 'any' above
 
 -- elem': same as elem but elementary definition
 -- (without using other functions except (==))
 
+-- ...what?
 -- (!!)
 
+-- alter list? hash-table kinda map?
 -- filter
 -- map
 
+--to know if there's a "cycle"...? repetitions, replicas?
 -- cycle
 -- repeat
 -- replicate
 
+--im *assuming* ill get two lists and see if 
+--one is in the beginning/middle/end
+--of the other
 -- isPrefixOf
 -- isInfixOf
 -- isSuffixOf
 
+--just...what...
 -- zip
 -- zipWith
 
+--merge kind of thing? intercalate two lists?
 -- intercalate
 -- nub
 
+--no idea what take/drop are but hey 
+--got their signatures
 -- splitAt
 -- what is the problem with the following?:
 -- splitAt n xs  =  (take n xs, drop n xs)
 
+--is this a break or a function?
 -- break
 
+--lists...of lists...somehow...?
 -- lines
 -- words
 -- unlines
 -- unwords
 
--- transpose
+--auxiliary
+line::[[a]]->[a]
+line [] = []
+line ([]:xss) = []
+line ((x:xs):xss) = (x:line xss)
+
+rmv_line::[[a]]->[[a]]
+rmv_line [] = []
+rmv_line ([]:xss) = [[]]
+rmv_line ((_:xs):xss) = (xs:(rmv_line xss))
+
+--def matrix transposition prolly can do
+transpose::[[a]]->[[a]]
+transpose [] = []
+transpose ([]:_) = []
+transpose xss = ([] <: line xss) ++ transpose (rmv_line xss)
+--God only knows how this worked
 
 -- checks if the letters of a phrase form a palindrome (see below for examples)
 palindrome :: String -> Bool
@@ -214,3 +268,9 @@ Examples of palindromes:
 
 -}
 
+--extra from class
+get:: Integral b => b->[a]->a
+get _ []     = undefined
+get x (y:ys) = if x == 0
+               then y
+               else get (x-1) ys
