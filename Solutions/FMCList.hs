@@ -9,6 +9,7 @@ import Prelude
     , (.) , ($)
     , flip , curry , uncurry
     , otherwise , error , undefined
+    , fst, snd
     )
 import qualified Prelude   as P
 import qualified Data.List as L
@@ -73,12 +74,12 @@ length :: Integral i => [a] -> i
 length []       = 0
 length (_ : xs) = 1 + length xs
 
--- Sum of all?
+-- Sum of all
 sum :: Num a => [a] -> a
 sum []       = 0
 sum (x : xs) = x + sum xs
 
--- Product of all?
+-- Product of all
 product :: Num a => [a] -> a
 product []       = 1
 product (x : xs) = x * product xs
@@ -104,10 +105,8 @@ infixr 5 ++
 snoc :: a -> [a] -> [a]
 snoc x [] = [x]
 snoc x y  = y ++ [x]
--- is it supposed to put the element on 
--- the end of the list...?
 
--- swapped arguments?
+-- swapped arguments
 (<:) :: [a] -> a -> [a]
 (<:) = flip snoc
 
@@ -135,74 +134,144 @@ maximum (x : xs) = if x > (maximum xs)
                    then x
                    else maximum xs
 
--- signatures from line 220
--- take a -> [a] -> ???
--- drop a -> [a] -> ???
 
--- ???
--- takeWhile
--- dropWhile
+-- First n elements of the list
+take :: Integral b => b -> [a] -> [a]
+take n xs = fst (take_drop n xs)
 
--- ???
--- tails
--- init
--- inits
+--rest of the list after take
+drop :: Integral b => b -> [a] -> [a]
+drop n xs = snd (take_drop n xs)
 
--- half-sure...but sure of signature
-subsequences :: [a] -> [a] -> [a]
-subsequences = undefined
+-- same but with a predicate 
+
+-- First elements of the list that attend a predicate
+take_while :: (a -> Bool) -> [a] -> [a]
+take_while p xs = fst (take_drop_while p xs)
+
+--rest of the list after take_while 
+drop_while :: (a -> Bool) -> [a] -> [a]
+drop_while p xs = snd (take_drop_while p xs)
+
+-- remove one by one 
+tails :: [a]  -> [[a]]
+tails []     = [[]]
+tails (x:xs) = [x:xs] ++ tails xs
+
+-- Same as tail but for head. Maybe worth a future final or smth
+init :: [a] -> [a]
+init []     = []
+init [_]    = []
+init (x:xs) = (x:init xs)
+
+-- Same as tails but for init
+inits :: [a] -> [[a]]
+inits [] = [[]]
+inits xs = (inits (init xs))++(xs:[])
+
+
+-- Powerset of list
+subsequences :: [a] -> [[a]]
+subsequences [] = [[]] 
+subsequences [x] = [[],[x]]
+subsequences [x,y] = [[],[x],[y],[x,y]]
+subsequences [x,y,z] = [[],[x],[y],[z],[x,y],[y,z],[x,z],[x,y,z]]
+--this really feels way too complicated rn...
 
 --im assuming im meant to say if 
---any of the items in the list is
---same as first argument
-any :: Eq a => a->[a]->Bool
+--any of the items in the list
+--attends a predicate
+any :: (a->Bool)->[a]->Bool
 any _ [] = False
-any x (y:ys) = if x == y
+any p (x:xs) = if p x
                then True
-               else any x ys
+               else any p xs
 
 --im assuming im meant to say if 
 --all of the items in the list are
---same as first argument
-all :: Eq a => a->[a]->Bool
+--attends a predicate
+all :: (a->Bool)->[a]->Bool
 all _ [] = True
-all x (y:ys) = if x /= y
-               then False
-               else all x ys
+all p (x:xs) = if p x 
+               then all p xs
+               else False
 
---these feel weirdly like number abuse
---or used only for Bool lists
---which means prolly both my guesses 
---are wrong :p
--- and
--- or
+-- For Bool lists only
+and :: [Bool] -> Bool
+and []       = True
+and (x : xs) = x && (and xs)
 
---in my mind thats the same as ++
--- concat
+or :: [Bool] -> Bool
+or []       = False
+or (x : xs) = x || (or xs)
 
--- ??
--- elem using the funciton 'any' above
+--list of lists into one only
+concat :: [[a]] -> [a]
+concat [xs] = xs
+concat (xs:xss) = xs ++ (concat xss)
+
+-- True if specific element is in list, else otherwise
+-- using the funciton 'any' above
+elem :: Eq a => a -> [a] -> Bool
+elem x xs = any (==x) xs
 
 -- elem': same as elem but elementary definition
 -- (without using other functions except (==))
+elem' :: Eq a => a -> [a] -> Bool 
+elem' _ [] = False
+elem' x (y:ys) = if x == y
+                 then True
+                 else elem' x ys
 
--- ...what?
--- (!!)
 
--- alter list? hash-table kinda map?
--- filter
--- map
+-- at operator
+(!!) :: Integral b => [a] -> b -> a
+[] !! _ = error"Out of bounds!!"
+(x:xs) !! n = if n == 0
+              then x
+              else xs !! (n-1)
 
---to know if there's a "cycle"...? repetitions, replicas?
--- cycle
--- repeat
--- replicate
+
+-- filter based off of a predicate
+filter :: [a] -> (a -> Bool) -> [a]
+filter [] _ = []
+filter (x:xs) p = if p x
+                  then x:(filter xs p)
+                  else filter xs p
+
+
+
+-- map a list with a function's output
+map :: [a] -> (a -> b) -> [b]
+map [] _ = []
+map (x:xs) f = (f x):(map xs f)
+
+--nice infinite functions...
+--endlessly cycling through list
+cycle :: [a] -> [a]
+cycle [] = []
+cycle xs = xs ++ cycle xs
+
+--endlessly repeating an element
+repeat :: a -> [a]
+repeat x = x:(repeat x)
+
+--finite version of repeat
+replicate :: Integral a => a -> b -> [b]
+replicate n y = take n (repeat y)
+--perfect occasion to put haskells sloth at test
 
 --im *assuming* ill get two lists and see if 
 --one is in the beginning/middle/end
 --of the other
--- isPrefixOf
+isPrefixOf :: Eq a => [a] -> [a] -> Bool
+isPrefixOf [] _ = True
+isPrefixOf (x:xs) (y:ys) = if x == y
+                           then isPrefixOf xs ys
+                           else False
 -- isInfixOf
+
+
 -- isSuffixOf
 
 --just...what...
@@ -228,16 +297,6 @@ all x (y:ys) = if x /= y
 -- unlines
 -- unwords
 
---auxiliary
-line::[[a]]->[a]
-line [] = []
-line ([]:xss) = []
-line ((x:xs):xss) = (x:line xss)
-
-rmv_line::[[a]]->[[a]]
-rmv_line [] = []
-rmv_line ([]:xss) = [[]]
-rmv_line ((_:xs):xss) = (xs:(rmv_line xss))
 
 --def matrix transposition prolly can do
 transpose::[[a]]->[[a]]
@@ -274,3 +333,58 @@ get _ []     = undefined
 get x (y:ys) = if x == 0
                then y
                else get (x-1) ys
+
+--simple insertion sort. heard 
+--quicksort can be done in two lines...
+sort :: Ord a => [a] -> [a]
+sort [] = []
+sort (x:xs) = insert x (sort xs)
+
+
+
+
+
+
+--extras i needed
+
+--like head/tail dichotomy but with init
+final :: [a] -> a
+final [x] = x
+final (x:xs) = final (xs)
+
+
+--used in matrix transposition, gives first line in a matrix
+line::[[a]]->[a]
+line [] = []
+line ([]:xss) = []
+line ((x:xs):xss) = (x:line xss)
+
+--used in matrix transposition, removes first line in a matrix
+rmv_line::[[a]]->[[a]]
+rmv_line [] = []
+rmv_line ([]:xss) = [[]]
+rmv_line ((_:xs):xss) = (xs:(rmv_line xss))
+
+  
+--Doing all the work only once
+take_drop:: Integral b => b -> [a] -> ([a], [a])
+take_drop _ []     = ([],[])
+take_drop 0 xs     = ([],xs)
+take_drop n (x:xs) = let next = take_drop (n-1) xs
+                     in (x:fst next,snd next)
+ 
+--Doing all the work only once
+take_drop_while:: (a -> Bool) -> [a] -> ([a], [a])
+take_drop_while _ []     = ([],[])
+take_drop_while p (x:xs) = if p x
+                           then let next = take_drop_while p xs
+                                in (x:fst next,snd next)
+                           else ([],x:xs)
+
+
+--insert on sorted list
+insert :: Ord a => a -> [a] -> [a]
+insert x [] = [x]
+insert x (y:ys) = if x < y
+                  then x:(y:ys)
+                  else y:(insert x ys) 
