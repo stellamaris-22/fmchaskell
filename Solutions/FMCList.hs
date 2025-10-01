@@ -59,18 +59,18 @@ write [u,v]     for our u `Cons` (v `Cons` Nil)
 -}
 
 head :: [a] -> a
-head [x]      = x
+head []      = undefined
 head (x : _) = x
 
 tail :: [a] -> [a]
-tail []       = []
+tail []       = undefined
 tail (_ : xs) = xs
 
 null :: [a] -> Bool
 null [] = True
 null _  = False
 
-length :: Integral i => [a] -> i
+length :: [a] -> Int
 length []       = 0
 length (_ : xs) = 1 + length xs
 
@@ -136,22 +136,22 @@ maximum (x : xs) = if x > (maximum xs)
 
 
 -- First n elements of the list
-take :: Integral b => b -> [a] -> [a]
+take :: Int -> [a] -> [a]
 take n xs = fst (take_drop n xs)
 
 --rest of the list after take
-drop :: Integral b => b -> [a] -> [a]
+drop :: Int -> [a] -> [a]
 drop n xs = snd (take_drop n xs)
 
 -- same but with a predicate 
 
 -- First elements of the list that attend a predicate
 take_while :: (a -> Bool) -> [a] -> [a]
-take_while p xs = fst (take_drop_while p xs)
+take_while p xs = fst (break (not . p) xs)
 
 --rest of the list after take_while 
 drop_while :: (a -> Bool) -> [a] -> [a]
-drop_while p xs = snd (take_drop_while p xs)
+drop_while p xs = snd (break (not . p) xs)
 
 -- remove one by one 
 tails :: [a]  -> [[a]]
@@ -170,13 +170,13 @@ inits [] = [[]]
 inits xs = (inits (init xs))++(xs:[])
 
 
+
+-- likely a better way. couldnt think of it.
 -- Powerset of list
-subsequences :: [a] -> [[a]]
-subsequences [] = [[]] 
+subsequences :: Eq a => [a] -> [[a]]
+subsequences []  = [[]] 
 subsequences [x] = [[],[x]]
-subsequences [x,y] = [[],[x],[y],[x,y]]
-subsequences [x,y,z] = [[],[x],[y],[z],[x,y],[y,z],[x,z],[x,y,z]]
---this really feels way too complicated rn...
+subsequences (x:xs) = nub ((subsequences xs) ++ (combine x (subsequences xs))) 
 
 --im assuming im meant to say if 
 --any of the items in the list
@@ -207,6 +207,7 @@ or (x : xs) = x || (or xs)
 
 --list of lists into one only
 concat :: [[a]] -> [a]
+concat [] = []
 concat [xs] = xs
 concat (xs:xss) = xs ++ (concat xss)
 
@@ -225,7 +226,7 @@ elem' x (y:ys) = if x == y
 
 
 -- at operator
-(!!) :: Integral b => [a] -> b -> a
+(!!) :: [a] -> Int -> a
 [] !! _ = error"Out of bounds!!"
 (x:xs) !! n = if n == 0
               then x
@@ -233,8 +234,8 @@ elem' x (y:ys) = if x == y
 
 
 -- filter based off of a predicate
-filter :: [a] -> (a -> Bool) -> [a]
-filter [] _ = []
+filter :: (a -> Bool) -> [a] -> [a]
+filter [] _     = []
 filter (x:xs) p = if p x
                   then x:(filter xs p)
                   else filter xs p
@@ -242,7 +243,7 @@ filter (x:xs) p = if p x
 
 
 -- map a list with a function's output
-map :: [a] -> (a -> b) -> [b]
+map :: (a -> b) -> [a] -> [b]
 map [] _ = []
 map (x:xs) f = (f x):(map xs f)
 
@@ -257,11 +258,11 @@ repeat :: a -> [a]
 repeat x = x:(repeat x)
 
 --finite version of repeat
-replicate :: Integral a => a -> b -> [b]
+replicate :: Int -> b -> [b]
 replicate n y = take n (repeat y)
 --perfect occasion to put haskells sloth at test
 
---im *assuming* ill get two lists and see if 
+--gets two lists and see if 
 --one is in the beginning/middle/end
 --of the other
 isPrefixOf :: Eq a => [a] -> [a] -> Bool
@@ -269,36 +270,86 @@ isPrefixOf [] _ = True
 isPrefixOf (x:xs) (y:ys) = if x == y
                            then isPrefixOf xs ys
                            else False
--- isInfixOf
+
+isInfixOf :: Eq a => [a] -> [a] -> Bool
+isInfixOf [] _ = True
+isInfixOf l [] = False
+isInfixOf l (y:ys) = if isPrefixOf l (y:ys)
+                     then True
+                     else isInfixOf l ys
+
+isSuffixOf :: Eq a => [a] -> [a] -> Bool
+isSuffixOf [] _ = True
+isSuffixOf _ [] = False
+isSuffixOf xs ys = isPrefixOf (reverse xs) (reverse ys)
+
+--turns two lists into a list of pairs
+zip :: [a] -> [b] -> [(a,b)]
+zip [] [] = []
+zip (x:xs) (y:ys) = (x,y):zip xs ys 
+
+-- uses a two-param function to turn the lists into one
+zipWith :: (a->b->c)->[a]->[b]->[c]
+zipWith _ [] [] = []
+zipWith f (x:xs) (y:ys) = (f x y):(zipWith f xs ys)
+
+-- turns list into one big list with prev lists intercalated by first arg
+intercalate :: [a] -> [[a]] -> [a]
+intercalate _ [] = []
+intercalate [] xss = concat xss
+intercalate ys (xs:xss) = if null xss
+                          then xs
+                          else xs ++ ys ++ (intercalate ys xss)
+
+--removes repeated elements, maintains first
+nub :: Eq a => [a] -> [a]
+nub [] = []
+nub (x:xs) = x:(nub (remove x xs))
 
 
--- isSuffixOf
 
---just...what...
--- zip
--- zipWith
-
---merge kind of thing? intercalate two lists?
--- intercalate
--- nub
-
---no idea what take/drop are but hey 
---got their signatures
--- splitAt
+splitAt :: Int -> [a] -> ([a],[a])
+splitAt n xs = take_drop n xs
 -- what is the problem with the following?:
 -- splitAt n xs  =  (take n xs, drop n xs)
-
---is this a break or a function?
--- break
-
---lists...of lists...somehow...?
--- lines
--- words
--- unlines
--- unwords
+-- got no idea... 
 
 
---def matrix transposition prolly can do
+--split when predicate is no longer satisfied
+break :: (a -> Bool) -> [a] -> ([a],[a])
+break _ []     = ([],[])
+break p (x:xs) = if p x
+                 then ([],x:xs)
+                 else let next = break p xs
+                      in (x:fst next,snd next)
+
+
+--string manip
+
+--breaks strings into list of strings on each \n
+lines :: String -> [String]
+lines "" = []
+lines cs = let (f,s:ss) = break (== '\n') cs 
+           in f : lines ss
+
+--breaks strings into list of strings on each whitespace
+words :: String -> [String]
+words "" = []
+words cs = let (f,s:ss) = break (C.isSpace) cs 
+           in f : words ss
+
+--adds '\n' between strings of list until its a big string
+unlines :: [String] -> String
+unlines [] = ""
+unlines l  = intercalate "\n" l 
+
+--adds ' ' between strings of list until its a big string
+unwords :: [String] -> String
+unwords [] = ""
+unwords l  = intercalate " " l 
+
+
+--matrix transposition
 transpose::[[a]]->[[a]]
 transpose [] = []
 transpose ([]:_) = []
@@ -308,13 +359,13 @@ transpose xss = ([] <: line xss) ++ transpose (rmv_line xss)
 -- checks if the letters of a phrase form a palindrome (see below for examples)
 palindrome :: String -> Bool
 palindrome [] = True
-palindrome s  = s == reverse s 
--- my best for now but im pretty sure ill
--- be able to use recursion by extracting last
--- and comparing to first and doing && 
--- with palindrome rest-of-the-list
+palindrome [c] = True
+palindrome ls  = let (c:cs) = treat_str ls
+                 in 
+                   if c == final cs
+                   then palindrome (init cs)
+                   else False 
 
--- also are we supposed to ignore punctuation...?
 {-
 
 Examples of palindromes:
@@ -328,11 +379,6 @@ Examples of palindromes:
 -}
 
 --extra from class
-get:: Integral b => b->[a]->a
-get _ []     = undefined
-get x (y:ys) = if x == 0
-               then y
-               else get (x-1) ys
 
 --simple insertion sort. heard 
 --quicksort can be done in two lines...
@@ -340,18 +386,15 @@ sort :: Ord a => [a] -> [a]
 sort [] = []
 sort (x:xs) = insert x (sort xs)
 
-
-
-
-
-
 --extras i needed
+--if i got time, do one for final/init and 
+--one for head/tail
 
 --like head/tail dichotomy but with init
 final :: [a] -> a
+final [] = undefined
 final [x] = x
 final (x:xs) = final (xs)
-
 
 --used in matrix transposition, gives first line in a matrix
 line::[[a]]->[a]
@@ -367,20 +410,11 @@ rmv_line ((_:xs):xss) = (xs:(rmv_line xss))
 
   
 --Doing all the work only once
-take_drop:: Integral b => b -> [a] -> ([a], [a])
+take_drop:: Int -> [a] -> ([a], [a])
 take_drop _ []     = ([],[])
 take_drop 0 xs     = ([],xs)
 take_drop n (x:xs) = let next = take_drop (n-1) xs
                      in (x:fst next,snd next)
- 
---Doing all the work only once
-take_drop_while:: (a -> Bool) -> [a] -> ([a], [a])
-take_drop_while _ []     = ([],[])
-take_drop_while p (x:xs) = if p x
-                           then let next = take_drop_while p xs
-                                in (x:fst next,snd next)
-                           else ([],x:xs)
-
 
 --insert on sorted list
 insert :: Ord a => a -> [a] -> [a]
@@ -388,3 +422,24 @@ insert x [] = [x]
 insert x (y:ys) = if x < y
                   then x:(y:ys)
                   else y:(insert x ys) 
+
+--auxiliary for subsequence combinations
+combine :: a -> [[a]] -> [[a]]
+combine n [] = [[n]]
+combine n [[]] = [[n]]
+combine n (xs:xss) = (n:xs):(combine n xss)
+
+--aux to remove all instances of a an item
+remove :: Eq a => a -> [a] -> [a]
+remove _ [] = []
+remove n (x:xs) = if n == x
+                  then remove n xs
+                  else x:(remove n xs)
+
+--removes whitespaces and punctuation from string
+--foor palindrome checking
+treat_str :: String -> String
+treat_str "" = ""
+treat_str (c:cs) = if C.isAlpha c
+                   then (C.toLower c):(treat_str cs) 
+                   else treat_str cs
