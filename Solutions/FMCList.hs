@@ -59,12 +59,10 @@ write [u,v]     for our u `Cons` (v `Cons` Nil)
 -}
 
 head :: [a] -> a
-head []      = undefined
-head (x : _) = x
+head l = fst (body l)
 
 tail :: [a] -> [a]
-tail []       = undefined
-tail (_ : xs) = xs
+tail l = snd (body l)
 
 null :: [a] -> Bool
 null [] = True
@@ -87,7 +85,7 @@ product (x : xs) = x * product xs
 -- List with all items but in reverse order
 reverse :: [a] -> [a]
 reverse []       = []
-reverse (x : xs) = reverse xs ++ (x : [])
+reverse (x : xs) = reverse xs <: x
 
 (++) :: [a] -> [a] -> [a]
 [] ++ l       = l;
@@ -160,9 +158,7 @@ tails (x:xs) = [x:xs] ++ tails xs
 
 -- Same as tail but for head. Maybe worth a future final or smth
 init :: [a] -> [a]
-init []     = []
-init [_]    = []
-init (x:xs) = (x:init xs)
+init l = fst (middle l)
 
 -- Same as tails but for init
 inits :: [a] -> [[a]]
@@ -235,17 +231,17 @@ elem' x (y:ys) = if x == y
 
 -- filter based off of a predicate
 filter :: (a -> Bool) -> [a] -> [a]
-filter [] _     = []
-filter (x:xs) p = if p x
-                  then x:(filter xs p)
-                  else filter xs p
+filter _ []     = []
+filter p (x:xs) = if p x
+                  then x:(filter p xs)
+                  else filter p xs
 
 
 
 -- map a list with a function's output
 map :: (a -> b) -> [a] -> [b]
-map [] _ = []
-map (x:xs) f = (f x):(map xs f)
+map _ []     = []
+map f (x:xs) = (f x):(map f xs)
 
 --nice infinite functions...
 --endlessly cycling through list
@@ -266,14 +262,15 @@ replicate n y = take n (repeat y)
 --one is in the beginning/middle/end
 --of the other
 isPrefixOf :: Eq a => [a] -> [a] -> Bool
-isPrefixOf [] _ = True
+isPrefixOf [] _          = True
+isPrefixOf _  []         = False
 isPrefixOf (x:xs) (y:ys) = if x == y
                            then isPrefixOf xs ys
                            else False
 
 isInfixOf :: Eq a => [a] -> [a] -> Bool
-isInfixOf [] _ = True
-isInfixOf l [] = False
+isInfixOf [] _     = True
+isInfixOf l []     = False
 isInfixOf l (y:ys) = if isPrefixOf l (y:ys)
                      then True
                      else isInfixOf l ys
@@ -285,12 +282,14 @@ isSuffixOf xs ys = isPrefixOf (reverse xs) (reverse ys)
 
 --turns two lists into a list of pairs
 zip :: [a] -> [b] -> [(a,b)]
-zip [] [] = []
+zip [] _ = []
+zip _ [] = []
 zip (x:xs) (y:ys) = (x,y):zip xs ys 
 
 -- uses a two-param function to turn the lists into one
 zipWith :: (a->b->c)->[a]->[b]->[c]
-zipWith _ [] [] = []
+zipWith _ [] _ = []
+zipWith _ _ [] = []
 zipWith f (x:xs) (y:ys) = (f x y):(zipWith f xs ys)
 
 -- turns list into one big list with prev lists intercalated by first arg
@@ -329,14 +328,18 @@ break p (x:xs) = if p x
 --breaks strings into list of strings on each \n
 lines :: String -> [String]
 lines "" = []
-lines cs = let (f,s:ss) = break (== '\n') cs 
-           in f : lines ss
+lines cs = let (f,ss) = break (== '\n') cs 
+           in f : case ss of
+                    []      -> []
+                    (c:cs)  -> lines cs
 
 --breaks strings into list of strings on each whitespace
 words :: String -> [String]
 words "" = []
-words cs = let (f,s:ss) = break (C.isSpace) cs 
-           in f : words ss
+words cs = let (f,ss) = break (C.isSpace) cs 
+           in f : case ss of
+                    []      -> []
+                    (c:cs)  -> words cs
 
 --adds '\n' between strings of list until its a big string
 unlines :: [String] -> String
@@ -352,19 +355,16 @@ unwords l  = intercalate " " l
 --matrix transposition
 transpose::[[a]]->[[a]]
 transpose [] = []
-transpose ([]:_) = []
-transpose xss = ([] <: line xss) ++ transpose (rmv_line xss)
+transpose ([]:xss) = transpose xss
+transpose xss = [line xss] ++ transpose (rmv_line xss)
 --God only knows how this worked
 
 -- checks if the letters of a phrase form a palindrome (see below for examples)
 palindrome :: String -> Bool
-palindrome [] = True
+palindrome []  = True
 palindrome [c] = True
-palindrome ls  = let (c:cs) = treat_str ls
-                 in 
-                   if c == final cs
-                   then palindrome (init cs)
-                   else False 
+palindrome ls  = let s = treat_str ls
+                 in s == reverse s
 
 {-
 
@@ -387,14 +387,11 @@ sort [] = []
 sort (x:xs) = insert x (sort xs)
 
 --extras i needed
---if i got time, do one for final/init and 
---one for head/tail
+
 
 --like head/tail dichotomy but with init
 final :: [a] -> a
-final [] = undefined
-final [x] = x
-final (x:xs) = final (xs)
+final l = snd (middle l)
 
 --used in matrix transposition, gives first line in a matrix
 line::[[a]]->[a]
@@ -405,7 +402,7 @@ line ((x:xs):xss) = (x:line xss)
 --used in matrix transposition, removes first line in a matrix
 rmv_line::[[a]]->[[a]]
 rmv_line [] = []
-rmv_line ([]:xss) = [[]]
+rmv_line ([]:xss) = rmv_line xss
 rmv_line ((_:xs):xss) = (xs:(rmv_line xss))
 
   
@@ -443,3 +440,15 @@ treat_str "" = ""
 treat_str (c:cs) = if C.isAlpha c
                    then (C.toLower c):(treat_str cs) 
                    else treat_str cs
+
+--head & tail at once
+body :: [a] -> (a,[a])
+body []     = undefined
+body (x:xs) = (x,xs)
+
+--init & final at once
+middle :: [a] -> ([a],a)
+middle [] = undefined
+middle [x] = ([],x)
+middle (x:xs) = let (i,f) = middle xs
+                in (x:i, f)
